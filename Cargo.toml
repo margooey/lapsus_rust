@@ -4,4 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+cacao = "0.3.2"
 cidre = "0.11.5"
+objc2-application-services = "0.3.2"
+
+[dependencies.macos_multitouch]
+path = "macos-multitouch"
