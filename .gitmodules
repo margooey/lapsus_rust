@@ -1,0 +1,3 @@
+[submodule "macos-multitouch"]
+	path = macos-multitouch
+	url = https://github.com/jonas-k/macos-multitouch
