@@ -1,16 +1,10 @@
-// use crate::trackpad;
 use cidre::cg;
 use core_graphics;
 use objc2;
 use objc2_app_kit;
-// use objc2_application_services;
 use crate::utils::{max, max_x, max_y, min, min_x, min_y};
 
-pub const MAXIMUM_MOMENTUM_SPEED: cg::Float = 9000.0;
-pub const TRACKPAD_VELOCITY_GAIN: cg::Float = 0.95;
-pub const GLIDE_DECAY_PER_SECOND: cg::Float = 6.5;
-pub const MINIMUM_GLIDE_VELOCITY: cg::Float = 220.0;
-pub const GLIDE_STOP_SPEED_FACTOR: cg::Float = 0.45;
+pub const ZERO_VECTOR: cg::Vector = cg::Vector { dx: 0.0, dy: 0.0 };
 
 enum VelocitySource {
     Pointer,
@@ -55,8 +49,8 @@ impl Engine {
     pub fn begin_touch(&mut self, position: cg::Point) {
         self.state.position = position;
         self.state.previous_position = position;
-        self.state.last_input_delta = cg::Vector { dx: 0.0, dy: 0.0 };
-        self.state.velocity = cg::Vector { dx: 0.0, dy: 0.0 };
+        self.state.last_input_delta = ZERO_VECTOR;
+        self.state.velocity = ZERO_VECTOR;
         self.set_gliding(false);
     }
 
@@ -104,8 +98,43 @@ impl Engine {
         }
     }
 
+    pub fn handle_no_touch(
+        &mut self,
+        physical_position: cg::Point,
+        delta_time: cg::Float,
+        suppress_glide: bool,
+        touch_ended_recently: bool,
+    ) {
+        self.last_physical_mouse_position = physical_position;
+        if touch_ended_recently {
+            if suppress_glide {
+                self.set_gliding(false);
+            } else {
+                self.begin_glide_if_needed();
+            }
+        }
+
+        if self.state.is_gliding {
+            self.apply_momentum(delta_time);
+        } else {
+            self.state.last_input_delta = ZERO_VECTOR;
+        }
+    }
+
+    fn begin_glide_if_needed(&mut self) {
+      let speed = Self::magnitude(&self.state.velocity);
+      if speed < env!("MINIMUM_GLIDE_VELOCITY").parse::<cg::Float>().unwrap() {
+            self.set_gliding(false);
+            self.state.velocity = ZERO_VECTOR;
+            return;
+      } else {
+            self.set_gliding(true);
+            self.sync_to_virtual_position();
+      }
+    }
+
     pub fn apply_momentum(&mut self, delta_time: cg::Float) {
-        let decay_factor = max(0.0, 1.0 - GLIDE_DECAY_PER_SECOND * delta_time);
+        let decay_factor = max(0.0, 1.0 - env!("GLIDE_DECAY_PER_SECOND").parse::<cg::Float>().unwrap() * delta_time);
         self.state.velocity.dx *= decay_factor;
         self.state.velocity.dy *= decay_factor;
 
@@ -123,9 +152,9 @@ impl Engine {
         self.sync_to_virtual_position();
 
         let speed = Self::magnitude(&self.state.velocity);
-        if speed < MINIMUM_GLIDE_VELOCITY * GLIDE_STOP_SPEED_FACTOR {
+        if speed < env!("MINIMUM_GLIDE_VELOCITY").parse::<cg::Float>().unwrap() * env!("GLIDE_STOP_SPEED_FACTOR").parse::<cg::Float>().unwrap() {
             self.set_gliding(false);
-            self.state.velocity = cg::Vector { dx: 0.0, dy: 0.0 };
+            self.state.velocity = ZERO_VECTOR;
             self.sync_to_virtual_position();
         }
     }
@@ -164,7 +193,7 @@ impl Engine {
     pub fn sync_state(&mut self, physical_position: cg::Point) {
         self.state.position = physical_position;
         self.state.previous_position = physical_position;
-        self.state.last_input_delta = cg::Vector { dx: 0.0, dy: 0.0 };
+        self.state.last_input_delta = ZERO_VECTOR;
         self.last_physical_mouse_position = physical_position;
     }
 
@@ -193,12 +222,15 @@ impl Engine {
             let scaled = cg::Vector {
                 dx: normalized_velocity.dx
                     * self.desktop_bounds.size.width
-                    * TRACKPAD_VELOCITY_GAIN,
+                    * env!("TRACKPAD_VELOCITY_GAIN").parse::<cg::Float>().unwrap(),
                 dy: normalized_velocity.dy
                     * self.desktop_bounds.size.height
-                    * TRACKPAD_VELOCITY_GAIN,
+                    * env!("TRACKPAD_VELOCITY_GAIN").parse::<cg::Float>().unwrap(),
             };
-            return Some(Self::clamped_velocity(&scaled, MAXIMUM_MOMENTUM_SPEED));
+            return Some(Self::clamped_velocity(
+                &scaled,
+                env!("MAXIMUM_MOMENTUM_SPEED").parse::<cg::Float>().unwrap(),
+            ));
         } else {
             return None;
         }
