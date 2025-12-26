@@ -1,24 +1,152 @@
-// use cacao::appkit;
-// use objc2_application_services;
-// use cidre::cf;
-use crate::engine;
+use crate::utils::{max, union_rect};
+use crate::{engine, trackpad};
+use cidre::cg::{Float, Point, Rect, Size, Vector};
 
 pub struct Controller {
-    engine: engine::Engine,
+    pub engine: engine::Engine,
+    monitor: trackpad::TrackpadMonitor,
+    is_running: bool,
+    last_update_timestamp: f64,
+    touch_ended_recently: bool,
+    pub is_touching: bool,
 }
 
 impl Controller {
     pub fn new() -> Self {
         Self {
             engine: engine::Engine::new(),
+            monitor: trackpad::TrackpadMonitor::new(),
+            is_running: false,
+            last_update_timestamp: 0.0,
+            touch_ended_recently: false,
+            is_touching: false,
         }
     }
 
     pub fn start(&mut self) {
-        // TODO
+        if !self.is_running {
+            self.is_running = true;
+            self.monitor.start();
+            self.update_desktop_bounds();
+            self.sync_state();
+            self.is_touching = self.monitor.is_touching();
+        }
     }
-    
+
+    pub fn begin_touch(&mut self, position: Point) {
+        self.is_touching = true;
+        self.touch_ended_recently = false;
+        self.engine.begin_touch(position);
+    }
+
+    pub fn handle_touch(
+        &mut self,
+        position: Point,
+        delta_time: Float,
+        normalized_velocity: Vector,
+    ) {
+        self.engine
+            .handle_touch(position, delta_time, Some(normalized_velocity));
+    }
+
+    pub fn end_touch(&mut self) {
+        self.is_touching = false;
+        self.touch_ended_recently = true;
+    }
+
+    pub fn handle_no_touch(&mut self, position: Point, delta_time: Float, suppress_glide: bool) {
+        self.engine.handle_no_touch(
+            position,
+            delta_time,
+            suppress_glide,
+            self.touch_ended_recently,
+        );
+        self.touch_ended_recently = false;
+    }
+
     pub fn stop(&mut self) {
-        // TODO
+        if self.is_running {
+            self.is_running = false;
+            self.monitor.stop();
+        }
+    }
+
+    pub fn update_state(&mut self) {
+        let now = objc2_core_foundation::CFAbsoluteTimeGetCurrent();
+        let delta_seconds = max(
+            now - self.last_update_timestamp,
+            env!("MIN_DT").parse::<f64>().unwrap(),
+        );
+        self.last_update_timestamp = now;
+        let delta_time = delta_seconds;
+        let physical_position = Point {
+            x: objc2_app_kit::NSEvent::mouseLocation().x,
+            y: objc2_app_kit::NSEvent::mouseLocation().y,
+        };
+        let is_touching = self.monitor.is_touching();
+
+        if is_touching {
+            if !self.touch_ended_recently {
+                self.engine.begin_touch(physical_position);
+            }
+            self.engine.handle_touch(
+                physical_position,
+                delta_time,
+                self.monitor.current_normalized_velocity(),
+            );
+        } else {
+            self.engine.handle_no_touch(
+                physical_position,
+                delta_time,
+                false, // TODO: is this still necessary?
+                self.touch_ended_recently,
+            );
+        }
+        self.touch_ended_recently = is_touching;
+    }
+
+    fn sync_state(&mut self) {
+        let current_position = objc2_app_kit::NSEvent::mouseLocation();
+        let physical_position = Point {
+            x: current_position.x,
+            y: current_position.y,
+        };
+        self.engine.sync_state(physical_position);
+        self.last_update_timestamp = objc2_core_foundation::CFAbsoluteTimeGetCurrent();
+    }
+
+    fn update_desktop_bounds(&mut self) {
+        let mut bounds = Rect::null();
+        let mtm = objc2::MainThreadMarker::new().expect("must be on the main thread");
+        let screens = objc2_app_kit::NSScreen::screens(mtm);
+        for screen in screens {
+            let rect = Rect {
+                origin: Point {
+                    x: screen.frame().origin.x,
+                    y: screen.frame().origin.y,
+                },
+                size: Size {
+                    width: screen.frame().size.width,
+                    height: screen.frame().size.height,
+                },
+            };
+            bounds = union_rect(&bounds, &rect);
+        }
+        if bounds == Rect::null() {
+            let main_frame = objc2_app_kit::NSScreen::mainScreen(mtm);
+            if let Some(screen) = main_frame {
+                bounds = Rect {
+                    origin: Point {
+                        x: screen.frame().origin.x,
+                        y: screen.frame().origin.y,
+                    },
+                    size: Size {
+                        width: screen.frame().size.width,
+                        height: screen.frame().size.height,
+                    },
+                }
+            }
+        }
+        self.engine.update_desktop_bounds(bounds);
     }
 }

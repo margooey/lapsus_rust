@@ -23,3 +23,21 @@ pub fn max_y(rect: &cg::Rect) -> cg::Float {
 pub fn min_y(rect: &cg::Rect) -> cg::Float {
     rect.origin.y
 }
+
+pub fn union_rect(a: &cg::Rect, b: &cg::Rect) -> cg::Rect {
+    let min_x = min(a.origin.x, b.origin.x);
+    let min_y = min(a.origin.y, b.origin.y);
+    let max_x = max(a.origin.x + a.size.width, b.origin.x + b.size.width);
+    let max_y = max(a.origin.y + a.size.height, b.origin.y + b.size.height);
+
+    cg::Rect {
+        origin: cg::Point {
+            x: min_x,
+            y: min_y,
+        },
+        size: cg::Size {
+            width: max_x - min_x,
+            height: max_y - min_y,
+        },
+    }
+}

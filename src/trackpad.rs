@@ -1,25 +1,23 @@
 // warning: this is llm code because i did not want to write a complete reimplementation of OpenMultitouchSupport in rust
 
-use cidre::cg;
+use cidre::cg::{Float, Point, Vector};
 use macos_multitouch::{self, MultitouchDevice};
 use std::sync::{Arc, Mutex};
 
-const MIN_DT: cg::Float = 1.0 / 500.0;
-
 #[derive(Clone, Copy, Debug)]
 pub struct TouchMetrics {
-    pub centroid: Option<cg::Point>,
-    pub normalized_velocity: cg::Vector,
+    pub centroid: Option<Point>,
+    pub normalized_velocity: Vector,
     pub is_touching: bool,
 }
 
 struct TrackpadState {
     is_touching: bool,
-    latest_positions: Vec<cg::Point>,
-    latest_centroid: Option<cg::Point>,
-    previous_centroid: Option<cg::Point>,
+    latest_positions: Vec<Point>,
+    latest_centroid: Option<Point>,
+    previous_centroid: Option<Point>,
     last_sample_timestamp: f64,
-    normalized_velocity: cg::Vector,
+    normalized_velocity: Vector,
 }
 
 pub struct TrackpadMonitor {
@@ -38,7 +36,7 @@ impl TrackpadMonitor {
                 latest_centroid: None,
                 previous_centroid: None,
                 last_sample_timestamp: 0.0,
-                normalized_velocity: cg::Vector { dx: 0.0, dy: 0.0 },
+                normalized_velocity: Vector { dx: 0.0, dy: 0.0 },
             })),
             listener_started: false,
         }
@@ -56,11 +54,11 @@ impl TrackpadMonitor {
             let state = state.clone();
             let _ = device.register_contact_frame_callback(
                 move |_device, data: &[macos_multitouch::Finger], timestamp, _frame| {
-                    let positions: Vec<cg::Point> = data
+                    let positions: Vec<Point> = data
                         .iter()
-                        .map(|finger| cg::Point {
-                            x: finger.normalized.pos.x as cg::Float,
-                            y: finger.normalized.pos.y as cg::Float,
+                        .map(|finger| Point {
+                            x: finger.normalized.pos.x as Float,
+                            y: finger.normalized.pos.y as Float,
                         })
                         .collect();
 
@@ -88,7 +86,7 @@ impl TrackpadMonitor {
             .is_touching
     }
 
-    pub fn current_touch_positions(&self) -> Vec<cg::Point> {
+    pub fn current_touch_positions(&self) -> Vec<Point> {
         self.state
             .lock()
             .expect("trackpad state lock poisoned")
@@ -96,14 +94,14 @@ impl TrackpadMonitor {
             .clone()
     }
 
-    pub fn current_touch_centroid(&self) -> Option<cg::Point> {
+    pub fn current_touch_centroid(&self) -> Option<Point> {
         self.state
             .lock()
             .expect("trackpad state lock poisoned")
             .latest_centroid
     }
 
-    pub fn current_normalized_velocity(&self) -> Option<cg::Vector> {
+    pub fn current_normalized_velocity(&self) -> Option<Vector> {
         let state = self.state.lock().expect("trackpad state lock poisoned");
         if state.is_touching {
             Some(state.normalized_velocity)
@@ -122,7 +120,7 @@ impl TrackpadMonitor {
     }
 }
 
-fn update_touch_metrics(state: &mut TrackpadState, positions: &[cg::Point], timestamp: f64) {
+fn update_touch_metrics(state: &mut TrackpadState, positions: &[Point], timestamp: f64) {
     state.latest_positions.clear();
     state.latest_positions.extend_from_slice(positions);
     state.is_touching = !positions.is_empty();
@@ -130,17 +128,17 @@ fn update_touch_metrics(state: &mut TrackpadState, positions: &[cg::Point], time
     if positions.is_empty() {
         state.latest_centroid = None;
         state.previous_centroid = None;
-        state.normalized_velocity = cg::Vector { dx: 0.0, dy: 0.0 };
+        state.normalized_velocity = Vector { dx: 0.0, dy: 0.0 };
         state.last_sample_timestamp = timestamp;
         return;
     }
 
-    let mut centroid = cg::Point { x: 0.0, y: 0.0 };
+    let mut centroid = Point { x: 0.0, y: 0.0 };
     for point in positions {
         centroid.x += point.x;
         centroid.y += point.y;
     }
-    let divisor = positions.len() as cg::Float;
+    let divisor = positions.len() as Float;
     centroid.x /= divisor;
     centroid.y /= divisor;
 
@@ -148,25 +146,27 @@ fn update_touch_metrics(state: &mut TrackpadState, positions: &[cg::Point], time
 
     if let Some(previous) = state.previous_centroid {
         if state.last_sample_timestamp > 0.0 {
-            let mut delta_time = (timestamp - state.last_sample_timestamp) as cg::Float;
-            if delta_time < MIN_DT {
-                delta_time = MIN_DT;
+            let mut delta_time = (timestamp - state.last_sample_timestamp) as Float;
+            if delta_time < env!("MIN_DT").parse::<Float>().unwrap() {
+                delta_time = env!("MIN_DT").parse::<Float>().unwrap();
             }
-            let raw_velocity = cg::Vector {
+            let raw_velocity = Vector {
                 dx: (centroid.x - previous.x) / delta_time,
                 dy: (centroid.y - previous.y) / delta_time,
             };
-            state.normalized_velocity = cg::Vector {
-                dx: state.normalized_velocity.dx * (1.0 - env!("VELOCITY_SMOOTHING").parse::<cg::Float>().unwrap())
-                    + raw_velocity.dx * env!("VELOCITY_SMOOTHING").parse::<cg::Float>().unwrap(),
-                dy: state.normalized_velocity.dy * (1.0 - env!("VELOCITY_SMOOTHING").parse::<cg::Float>().unwrap())
-                    + raw_velocity.dy * env!("VELOCITY_SMOOTHING").parse::<cg::Float>().unwrap(),
+            state.normalized_velocity = Vector {
+                dx: state.normalized_velocity.dx
+                    * (1.0 - env!("VELOCITY_SMOOTHING").parse::<Float>().unwrap())
+                    + raw_velocity.dx * env!("VELOCITY_SMOOTHING").parse::<Float>().unwrap(),
+                dy: state.normalized_velocity.dy
+                    * (1.0 - env!("VELOCITY_SMOOTHING").parse::<Float>().unwrap())
+                    + raw_velocity.dy * env!("VELOCITY_SMOOTHING").parse::<Float>().unwrap(),
             };
         } else {
-            state.normalized_velocity = cg::Vector { dx: 0.0, dy: 0.0 };
+            state.normalized_velocity = Vector { dx: 0.0, dy: 0.0 };
         }
     } else {
-        state.normalized_velocity = cg::Vector { dx: 0.0, dy: 0.0 };
+        state.normalized_velocity = Vector { dx: 0.0, dy: 0.0 };
     }
 
     state.previous_centroid = Some(centroid);
