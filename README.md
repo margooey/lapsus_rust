@@ -10,6 +10,9 @@
 - log
 - env_logger
 
+## Download
+You can download Lapsus_Rust on the [Releases](https://github.com/margooey/lapsus_rust/releases) page.
+
 ## Build
 ```shell
 cargo build --release
