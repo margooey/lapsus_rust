@@ -103,7 +103,7 @@ impl Controller {
             self.engine.handle_no_touch(
                 physical_position,
                 delta_time,
-                false, // TODO: is this still necessary?
+                self.monitor.should_suppress_glide(),
                 self.touch_ended_recently,
             );
         }

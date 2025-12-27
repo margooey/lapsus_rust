@@ -15,9 +15,7 @@ fn main() {
     use std::{thread, time::Duration};
     loop {
         helper::fix_cursor();
-        if controller.is_touching || controller.engine.state.is_gliding {
-            controller.update_state();
-        }
+        controller.update_state();
         thread::sleep(Duration::from_millis(2)); // 500hz
     }
 }

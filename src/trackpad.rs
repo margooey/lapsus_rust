@@ -1,5 +1,6 @@
 // warning: this is llm code because i did not want to write a complete reimplementation of OpenMultitouchSupport in rust
 // i will need to rewrite this myself since i think this is bad
+// update: it's actually fine and i'm not gonna rewrite it but i do want to understand it a bit more than i currently do
 
 use cidre::cg::{Float, Point, Vector};
 use macos_multitouch::{self, MultitouchDevice};
@@ -19,6 +20,7 @@ struct TrackpadState {
     previous_centroid: Option<Point>,
     last_sample_timestamp: f64,
     normalized_velocity: Vector,
+    suppress_glide_deadline: f64,
 }
 
 pub struct TrackpadMonitor {
@@ -38,6 +40,7 @@ impl TrackpadMonitor {
                 previous_centroid: None,
                 last_sample_timestamp: 0.0,
                 normalized_velocity: Vector { dx: 0.0, dy: 0.0 },
+                suppress_glide_deadline: 0.0,
             })),
             listener_started: false,
         }
@@ -123,11 +126,27 @@ impl TrackpadMonitor {
             is_touching: state.is_touching,
         }
     }
+
+    pub fn should_suppress_glide(&self) -> bool {
+        let deadline = self
+            .state
+            .lock()
+            .expect("trackpad state lock poisoned")
+            .suppress_glide_deadline;
+        objc2_core_foundation::CFAbsoluteTimeGetCurrent() < deadline
+    }
 }
 
 fn update_touch_metrics(state: &mut TrackpadState, positions: &[Point], timestamp: f64) {
     state.latest_positions.clear();
     state.latest_positions.extend_from_slice(positions);
+    if positions.len() > 1 {
+        let now = objc2_core_foundation::CFAbsoluteTimeGetCurrent();
+        let duration = env!("MULTI_FINGER_SUPPRESSION_DEADLINE")
+            .parse::<f64>()
+            .unwrap();
+        state.suppress_glide_deadline = now + duration;
+    }
     let was_touching = state.is_touching;
     state.is_touching = !positions.is_empty();
     if state.is_touching != was_touching {
