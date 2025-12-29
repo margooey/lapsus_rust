@@ -150,10 +150,7 @@ fn update_touch_metrics(state: &mut TrackpadState, positions: &[Point], timestam
     let was_touching = state.is_touching;
     state.is_touching = !positions.is_empty();
     if state.is_touching != was_touching {
-        log::info!(
-            "touch {}",
-            if state.is_touching { "start" } else { "end" }
-        );
+        log::info!("touch {}", if state.is_touching { "start" } else { "end" });
     }
 
     if positions.is_empty() {

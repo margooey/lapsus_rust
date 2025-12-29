@@ -11,6 +11,7 @@ objc2-core-foundation = "0.3.2"
 objc2 = "0.6.3"
 log = "0.4.29"
 env_logger = "0.11.8"
+chrono = "0.4.42"
 
 [dependencies.macos_multitouch]
 path = "macos-multitouch"

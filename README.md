@@ -9,9 +9,10 @@
 - macos-multitouch
 - log
 - env_logger
+- chrono
 
 ## Download
-You can download Lapsus_Rust on the [Releases](https://github.com/margooey/lapsus_rust/releases) page.
+You can download Lapsus_Rust on the [Releases](https://github.com/margooey/lapsus_rust/releases) page. You can also download any built artifacts from the [workflow](https://github.com/margooey/lapsus_rust/actions).
 
 ## Build
 ```shell
@@ -22,3 +23,6 @@ cargo build --release
 ```shell
 cargo run RUST_LOG=DEBUG
 ```
+
+## License
+Lapsus_Rust is licensed under a custom non-commercial license.
