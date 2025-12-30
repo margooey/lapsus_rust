@@ -1,4 +1,4 @@
-use crate::utils::{max, max_x, max_y, min, min_x, min_y};
+use crate::utils::max;
 use cidre::cg::{Float, Point, Rect, Vector};
 use core_graphics::display;
 use objc2_app_kit::NSScreen;
@@ -111,8 +111,6 @@ impl Engine {
             dy: delta_pos.y,
         };
 
-        self.clamp_position_to_desktop();
-
         if self.state.is_gliding {
             self.set_gliding(false);
         }
@@ -178,7 +176,6 @@ impl Engine {
         self.state.position.y += momentum_delta.dy;
         self.state.last_input_delta = momentum_delta;
 
-        self.clamp_position_to_desktop();
         self.sync_to_virtual_position();
 
         let speed = Self::magnitude(&self.state.velocity);
@@ -205,7 +202,6 @@ impl Engine {
             bounds.size.width,
             bounds.size.height
         );
-        self.clamp_position_to_desktop();
     }
 
     pub fn sync_to_virtual_position(&mut self) {
@@ -232,20 +228,6 @@ impl Engine {
         self.state.previous_position = physical_position;
         self.state.last_input_delta = ZERO_VECTOR;
         self.last_physical_mouse_position = physical_position;
-    }
-
-    pub fn clamp_position_to_desktop(&mut self) {
-        if self.desktop_bounds == Rect::null() {
-            return;
-        }
-        self.state.position.x = min(
-            max(self.state.position.x, min_x(&self.desktop_bounds)),
-            max_x(&self.desktop_bounds),
-        );
-        self.state.position.y = min(
-            max(self.state.position.y, min_y(&self.desktop_bounds)),
-            max_y(&self.desktop_bounds),
-        );
     }
 
     fn trackpad_velocity_in_pixels(

@@ -1,5 +1,8 @@
 # A WIP re-write of [Lapsus](https://github.com/margooey/Lapsus) in rust using various crates for Apple framework bindings.
 
+## What is it
+Lapsus is an application designed to emulate the feeling of using a trackball. It applies "momentum" to your cursor so that it glides (or slides) across the screen until slowly coming to a stop. Lapsus was born out of Magnes, which was an application designed to emulate the iPadOS cursor as a whole.
+
 ## Crates used:
 - cidre
 - core-graphics
