@@ -188,7 +188,7 @@ impl Engine {
 
     pub fn sync_to_virtual_position(&mut self) {
         let target = self.state.position;
-        let mtm = objc2::MainThreadMarker::new().expect("must be on the main thread");
+        let mtm = objc2_foundation::MainThreadMarker::new().expect("must be on the main thread");
         if let Some(screen) = NSScreen::mainScreen(mtm) {
             let local_x = target.x - screen.frame().min().x;
             let local_y_from_bottom = target.y - screen.frame().min().y;

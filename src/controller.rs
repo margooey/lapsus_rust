@@ -123,7 +123,7 @@ impl Controller {
 
     fn update_desktop_bounds(&mut self) {
         let mut bounds = Rect::null();
-        let mtm = objc2::MainThreadMarker::new().expect("must be on the main thread");
+        let mtm = objc2_foundation::MainThreadMarker::new().expect("must be on the main thread");
         let screens = objc2_app_kit::NSScreen::screens(mtm);
         for screen in screens {
             let frame = screen.frame();
