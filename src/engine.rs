@@ -1,4 +1,4 @@
-use crate::utils::max;
+use crate::{config, utils::max};
 use cidre::cg::{Float, Point, Rect, Vector};
 use core_graphics::display;
 use objc2_app_kit::NSScreen;
@@ -141,7 +141,7 @@ impl Engine {
 
     fn begin_glide_if_needed(&mut self) {
         let speed = Self::magnitude(&self.state.velocity);
-        let min_speed = env!("MINIMUM_GLIDE_VELOCITY").parse::<Float>().unwrap();
+        let min_speed = config().minimum_glide_velocity;
         if speed < min_speed {
             log::debug!(
                 "glide suppressed: speed {:.3} < min {:.3}",
@@ -161,7 +161,7 @@ impl Engine {
     pub fn apply_momentum(&mut self, delta_time: Float) {
         let decay_factor = max(
             0.0,
-            1.0 - env!("GLIDE_DECAY_PER_SECOND").parse::<Float>().unwrap() * delta_time,
+            1.0 - config().glide_decay_per_second * delta_time
         );
         self.state.velocity.dx *= decay_factor;
         self.state.velocity.dy *= decay_factor;
@@ -180,8 +180,8 @@ impl Engine {
 
         let speed = Self::magnitude(&self.state.velocity);
         if speed
-            < env!("MINIMUM_GLIDE_VELOCITY").parse::<Float>().unwrap()
-                * env!("GLIDE_STOP_SPEED_FACTOR").parse::<Float>().unwrap()
+            < config().minimum_glide_velocity
+                * config().glide_stop_speed_factor
         {
             self.set_gliding(false);
             self.state.velocity = ZERO_VECTOR;
@@ -241,14 +241,14 @@ impl Engine {
             let scaled = Vector {
                 dx: normalized_velocity.dx
                     * self.desktop_bounds.size.width
-                    * env!("TRACKPAD_VELOCITY_GAIN").parse::<Float>().unwrap(),
+                    * config().trackpad_velocity_gain,
                 dy: normalized_velocity.dy
                     * self.desktop_bounds.size.height
-                    * env!("TRACKPAD_VELOCITY_GAIN").parse::<Float>().unwrap(),
+                    * config().trackpad_velocity_gain,
             };
             return Some(Self::clamped_velocity(
                 &scaled,
-                env!("MAXIMUM_MOMENTUM_SPEED").parse::<Float>().unwrap(),
+                config().maximum_momentum_speed
             ));
         } else {
             return None;

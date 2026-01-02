@@ -6,6 +6,8 @@ use cidre::cg::{Float, Point, Vector};
 use macos_multitouch::{self, MultitouchDevice};
 use std::sync::{Arc, Mutex};
 
+use crate::config;
+
 #[derive(Clone, Copy, Debug)]
 pub struct TouchMetrics {
     pub centroid: Option<Point>,
@@ -142,9 +144,7 @@ fn update_touch_metrics(state: &mut TrackpadState, positions: &[Point], timestam
     state.latest_positions.extend_from_slice(positions);
     if positions.len() > 1 {
         let now = objc2_core_foundation::CFAbsoluteTimeGetCurrent();
-        let duration = env!("MULTI_FINGER_SUPPRESSION_DEADLINE")
-            .parse::<f64>()
-            .unwrap();
+        let duration = config().multi_finger_suppression_deadline;
         state.suppress_glide_deadline = now + duration;
     }
     let was_touching = state.is_touching;
@@ -175,8 +175,8 @@ fn update_touch_metrics(state: &mut TrackpadState, positions: &[Point], timestam
     if let Some(previous) = state.previous_centroid {
         if state.last_sample_timestamp > 0.0 {
             let mut delta_time = (timestamp - state.last_sample_timestamp) as Float;
-            if delta_time < env!("MIN_DT").parse::<Float>().unwrap() {
-                delta_time = env!("MIN_DT").parse::<Float>().unwrap();
+            if delta_time < config().min_dt {
+                delta_time = config().min_dt;
             }
             let raw_velocity = Vector {
                 dx: (centroid.x - previous.x) / delta_time,
@@ -184,11 +184,11 @@ fn update_touch_metrics(state: &mut TrackpadState, positions: &[Point], timestam
             };
             state.normalized_velocity = Vector {
                 dx: state.normalized_velocity.dx
-                    * (1.0 - env!("VELOCITY_SMOOTHING").parse::<Float>().unwrap())
-                    + raw_velocity.dx * env!("VELOCITY_SMOOTHING").parse::<Float>().unwrap(),
+                    * (1.0 - config().velocity_smoothing)
+                    + raw_velocity.dx * config().velocity_smoothing,
                 dy: state.normalized_velocity.dy
-                    * (1.0 - env!("VELOCITY_SMOOTHING").parse::<Float>().unwrap())
-                    + raw_velocity.dy * env!("VELOCITY_SMOOTHING").parse::<Float>().unwrap(),
+                    * (1.0 - config().velocity_smoothing)
+                    + raw_velocity.dy * config().velocity_smoothing,
             };
         } else {
             state.normalized_velocity = Vector { dx: 0.0, dy: 0.0 };

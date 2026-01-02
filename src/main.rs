@@ -9,7 +9,35 @@ use chrono::Local;
 use log::LevelFilter;
 use std::fs::File;
 use std::io::Write;
+use std::env;
+use std::sync::OnceLock;
+use cidre::cg::{Float};
 
+pub struct Config {
+    maximum_momentum_speed: f64,
+    trackpad_velocity_gain: f64,
+    glide_decay_per_second: f64,
+    minimum_glide_velocity: f64,
+    glide_stop_speed_factor: f64,
+    velocity_smoothing: f64,
+    min_dt: f64,
+    multi_finger_suppression_deadline: f64,
+}
+
+static CONFIG: OnceLock<Config> = OnceLock::new();
+
+pub fn config() -> &'static Config {
+    CONFIG.get_or_init(|| Config {
+        maximum_momentum_speed: env!("MAXIMUM_MOMENTUM_SPEED").parse::<Float>().unwrap(),
+        trackpad_velocity_gain: env!("TRACKPAD_VELOCITY_GAIN").parse::<Float>().unwrap(),
+        glide_decay_per_second: env!("GLIDE_DECAY_PER_SECOND").parse::<Float>().unwrap(),
+        minimum_glide_velocity: env!("MINIMUM_GLIDE_VELOCITY").parse::<Float>().unwrap(),
+        glide_stop_speed_factor: env!("GLIDE_STOP_SPEED_FACTOR").parse::<Float>().unwrap(),
+        velocity_smoothing: env!("VELOCITY_SMOOTHING").parse::<Float>().unwrap(),
+        min_dt: env!("MIN_DT").parse::<Float>().unwrap(),
+        multi_finger_suppression_deadline: env!("MULTI_FINGER_SUPPRESSION_DEADLINE").parse::<f64>().unwrap(),
+    })
+}
 fn main() {
     let target = Box::new(File::create("lapsus_log.txt").expect("Can't create file"));
 

@@ -1,5 +1,5 @@
 use crate::utils::{max, union_rect};
-use crate::{engine, trackpad};
+use crate::{config, engine, trackpad};
 use cidre::cg::{Float, Point, Rect, Size, Vector};
 
 pub struct Controller {
@@ -76,13 +76,14 @@ impl Controller {
         let now = objc2_core_foundation::CFAbsoluteTimeGetCurrent();
         let delta_seconds = max(
             now - self.last_update_timestamp,
-            env!("MIN_DT").parse::<f64>().unwrap(),
+            config().min_dt,
         );
         self.last_update_timestamp = now;
         let delta_time = delta_seconds;
+        let ns_mouse_location = objc2_app_kit::NSEvent::mouseLocation();
         let physical_position = Point {
-            x: objc2_app_kit::NSEvent::mouseLocation().x,
-            y: objc2_app_kit::NSEvent::mouseLocation().y,
+            x: ns_mouse_location.x,
+            y: ns_mouse_location.y,
         };
         let is_touching = self.monitor.is_touching();
 
@@ -125,14 +126,15 @@ impl Controller {
         let mtm = objc2::MainThreadMarker::new().expect("must be on the main thread");
         let screens = objc2_app_kit::NSScreen::screens(mtm);
         for screen in screens {
+            let frame = screen.frame();
             let rect = Rect {
                 origin: Point {
-                    x: screen.frame().origin.x,
-                    y: screen.frame().origin.y,
+                    x: frame.origin.x,
+                    y: frame.origin.y,
                 },
                 size: Size {
-                    width: screen.frame().size.width,
-                    height: screen.frame().size.height,
+                    width: frame.size.width,
+                    height: frame.size.height,
                 },
             };
             bounds = union_rect(&bounds, &rect);
@@ -140,14 +142,15 @@ impl Controller {
         if bounds == Rect::null() {
             let main_frame = objc2_app_kit::NSScreen::mainScreen(mtm);
             if let Some(screen) = main_frame {
+                let frame = screen.frame();
                 bounds = Rect {
                     origin: Point {
-                        x: screen.frame().origin.x,
-                        y: screen.frame().origin.y,
+                        x: frame.origin.x,
+                        y: frame.origin.y,
                     },
                     size: Size {
-                        width: screen.frame().size.width,
-                        height: screen.frame().size.height,
+                        width: frame.size.width,
+                        height: frame.size.height,
                     },
                 }
             }
