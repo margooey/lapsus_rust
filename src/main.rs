@@ -42,7 +42,7 @@ fn main() {
     let target = Box::new(File::create("lapsus_log.txt").expect("Can't create file"));
 
     env_logger::Builder::new()
-        // .target(env_logger::Target::Pipe(target))
+        .target(env_logger::Target::Pipe(target))
         .filter(None, LevelFilter::Debug)
         .format(|buf, record| {
             writeln!(

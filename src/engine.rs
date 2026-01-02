@@ -161,7 +161,7 @@ impl Engine {
     pub fn apply_momentum(&mut self, delta_time: Float) {
         let decay_factor = max(
             0.0,
-            1.0 - config().glide_decay_per_second,
+            1.0 - config().glide_decay_per_second * delta_time
         );
         self.state.velocity.dx *= decay_factor;
         self.state.velocity.dy *= decay_factor;
