@@ -43,7 +43,7 @@ impl Engine {
 
     pub fn set_gliding(&mut self, value: bool) {
         if self.state.is_gliding != value {
-            log::info!("glide {}", if value { "start" } else { "stop" });
+            log::debug!("glide {}", if value { "start" } else { "stop" });
         }
         self.state.is_gliding = value;
     }
@@ -73,29 +73,10 @@ impl Engine {
             dx: delta_pos.x / delta_time,
             dy: delta_pos.y / delta_time,
         };
-        let pointer_speed = Self::magnitude(&pointer_velocity);
 
         let mut velocity = pointer_velocity;
         let mut source: VelocitySource = VelocitySource::Pointer;
-        let trackpad_velocity = self.trackpad_velocity_in_pixels(&normalized_trackpad_velocity);
-        let trackpad_speed = trackpad_velocity
-            .as_ref()
-            .map(Self::magnitude)
-            .unwrap_or(0.0);
-        if pointer_speed == 0.0 && trackpad_speed == 0.0 {
-            let normalized_desc = match normalized_trackpad_velocity {
-                Some(v) => format!("({:.3},{:.3})", v.dx, v.dy),
-                None => "none".to_string(),
-            };
-            log::info!(
-                "zero velocity: delta_pos ({:.3},{:.3}), dt {:.4}, normalized {}, bounds_null {}",
-                delta_pos.x,
-                delta_pos.y,
-                delta_time,
-                normalized_desc,
-                self.desktop_bounds == Rect::null(),
-            );
-        }
+        let trackpad_velocity = self.trackpad_velocity_in_pixels(normalized_trackpad_velocity);
         if let Some(trackpad_velocity) = trackpad_velocity {
             if Self::magnitude(&trackpad_velocity) > Self::magnitude(&pointer_velocity) {
                 velocity = trackpad_velocity;
@@ -159,9 +140,10 @@ impl Engine {
     }
 
     pub fn apply_momentum(&mut self, delta_time: Float) {
+        let config = config();
         let decay_factor = max(
             0.0,
-            1.0 - config().glide_decay_per_second * delta_time
+            1.0 - config.glide_decay_per_second * delta_time
         );
         self.state.velocity.dx *= decay_factor;
         self.state.velocity.dy *= decay_factor;
@@ -180,8 +162,8 @@ impl Engine {
 
         let speed = Self::magnitude(&self.state.velocity);
         if speed
-            < config().minimum_glide_velocity
-                * config().glide_stop_speed_factor
+            < config.minimum_glide_velocity
+                * config.glide_stop_speed_factor
         {
             self.set_gliding(false);
             self.state.velocity = ZERO_VECTOR;
@@ -195,7 +177,7 @@ impl Engine {
 
     pub fn update_desktop_bounds(&mut self, bounds: Rect) {
         self.desktop_bounds = bounds;
-        log::info!(
+        log::debug!(
             "desktop bounds: origin ({:.1},{:.1}) size ({:.1},{:.1})",
             bounds.origin.x,
             bounds.origin.y,
@@ -232,8 +214,9 @@ impl Engine {
 
     fn trackpad_velocity_in_pixels(
         &mut self,
-        normalized_velocity: &Option<Vector>,
+        normalized_velocity: Option<Vector>,
     ) -> Option<Vector> {
+        let config = config();
         if self.desktop_bounds == Rect::null() {
             return None;
         }
@@ -241,14 +224,14 @@ impl Engine {
             let scaled = Vector {
                 dx: normalized_velocity.dx
                     * self.desktop_bounds.size.width
-                    * config().trackpad_velocity_gain,
+                    * config.trackpad_velocity_gain,
                 dy: normalized_velocity.dy
                     * self.desktop_bounds.size.height
-                    * config().trackpad_velocity_gain,
+                    * config.trackpad_velocity_gain,
             };
             return Some(Self::clamped_velocity(
                 &scaled,
-                config().maximum_momentum_speed
+                config.maximum_momentum_speed
             ));
         } else {
             return None;

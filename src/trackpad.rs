@@ -56,7 +56,7 @@ impl TrackpadMonitor {
 
         let state = self.state.clone();
         let mut devices = macos_multitouch::get_multitouch_devices();
-        log::info!("trackpad devices: {}", devices.len());
+        log::debug!("trackpad devices: {}", devices.len());
         if devices.is_empty() {
             log::warn!("no multitouch devices detected");
         }
@@ -150,7 +150,7 @@ fn update_touch_metrics(state: &mut TrackpadState, positions: &[Point], timestam
     let was_touching = state.is_touching;
     state.is_touching = !positions.is_empty();
     if state.is_touching != was_touching {
-        log::info!("touch {}", if state.is_touching { "start" } else { "end" });
+        log::debug!("touch {}", if state.is_touching { "start" } else { "end" });
     }
 
     if positions.is_empty() {

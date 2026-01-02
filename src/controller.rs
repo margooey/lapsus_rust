@@ -26,7 +26,7 @@ impl Controller {
     pub fn start(&mut self) {
         if !self.is_running {
             self.is_running = true;
-            log::info!("controller start");
+            log::debug!("controller start");
             self.monitor.start();
             self.update_desktop_bounds();
             self.sync_state();

@@ -43,7 +43,7 @@ fn main() {
 
     env_logger::Builder::new()
         .target(env_logger::Target::Pipe(target))
-        .filter(None, LevelFilter::Debug)
+        .filter(None, LevelFilter::Info)
         .format(|buf, record| {
             writeln!(
                 buf,
@@ -63,6 +63,6 @@ fn main() {
     loop {
         helper::fix_cursor();
         controller.update_state();
-        thread::sleep(Duration::from_millis(2)); // 500hz
+        thread::sleep(Duration::from_secs_f64(config().min_dt));
     }
 }
