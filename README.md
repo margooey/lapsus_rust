@@ -7,8 +7,8 @@ Lapsus is an application designed to emulate the feeling of using a trackball. I
 - cidre
 - core-graphics
 - objc2-app-kit
+- objc2-foundation
 - objc2-core-foundation
-- objc2
 - macos-multitouch
 - log
 - env_logger
