@@ -3,6 +3,21 @@
 version = 4
 
 [[package]]
+name = "Lapsus"
+version = "1.2.0"
+dependencies = [
+ "chrono",
+ "cidre",
+ "core-graphics",
+ "env_logger",
+ "log",
+ "macos_multitouch",
+ "objc2-app-kit",
+ "objc2-core-foundation",
+ "objc2-foundation",
+]
+
+[[package]]
 name = "aho-corasick"
 version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -324,21 +339,6 @@ checksum = "464a3709c7f55f1f721e5389aa6ea4e3bc6aba669353300af094b29ffbdde1d8"
 dependencies = [
  "once_cell",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "lapsus_rust"
-version = "1.2.0"
-dependencies = [
- "chrono",
- "cidre",
- "core-graphics",
- "env_logger",
- "log",
- "macos_multitouch",
- "objc2-app-kit",
- "objc2-core-foundation",
- "objc2-foundation",
 ]
 
 [[package]]

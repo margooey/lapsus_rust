@@ -26,5 +26,5 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: lapsus_rust
-        path: target/release/lapsus_rust
+        name: Lapsus
+        path: target/release/Lapsus

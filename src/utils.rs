@@ -1,4 +1,4 @@
-use cidre::cg::{Rect, Point, Size};
+use cidre::cg::{Point, Rect, Size};
 
 pub fn min(a: f64, b: f64) -> f64 {
     if a > b { b } else { a }

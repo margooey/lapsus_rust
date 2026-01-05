@@ -7,7 +7,7 @@ Lapsus is an application designed to emulate the feeling of using a trackball. I
 
 <div align="center"><h2>Download</h2></div>
 
-You can download Lapsus on the [Releases](https://github.com/margooey/lapsus_rust/releases) page. You can also download any built artifacts from the [workflow](https://github.com/margooey/lapsus_rust/actions). 
+You can download Lapsus on the [Releases](https://github.com/margooey/Lapsus/releases) page. You can also download any built artifacts from the [workflow](https://github.com/margooey/Lapsus/actions). 
 
 You can run Lapsus simply by double-clicking on the binary. You can stop the glide behavior by pressing `Ctrl+C` or by killing the terminal session.
 
@@ -33,4 +33,4 @@ cargo run RUST_LOG=DEBUG
 
 
 <div align="center"><h2>License</h2></div>
-Lapsus_Rust is licensed under a custom non-commercial license.
+Lapsus is licensed under a custom non-commercial license.
