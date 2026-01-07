@@ -1,4 +1,4 @@
-use cidre::cg::{Point, Rect, Size};
+use cidre::cg::{Point, Rect, Size, EventSrc, EventSrcStateId};
 
 pub fn min(a: f64, b: f64) -> f64 {
     if a > b { b } else { a }
@@ -26,5 +26,13 @@ pub fn union_rect(a: &Rect, b: &Rect) -> Rect {
             width: max_x - min_x,
             height: max_y - min_y,
         },
+    }
+}
+
+pub fn disable_local_event_suppression() {
+    let state_id = EventSrcStateId::CombinedSession;
+    let mut event_source_ref = EventSrc::with_state(state_id);
+    if let Some(ref mut retained) = event_source_ref {
+        EventSrc::set_local_events_suppression_interval(retained, 0.0);
     }
 }

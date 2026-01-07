@@ -1,6 +1,5 @@
 pub mod controller;
 pub mod engine;
-pub mod helper;
 pub mod tests;
 pub mod trackpad;
 pub mod utils;
@@ -63,7 +62,7 @@ fn main() {
     controller.start();
     use std::{thread, time::Duration};
     loop {
-        helper::fix_cursor();
+        utils::disable_local_event_suppression();
         controller.update_state();
         thread::sleep(Duration::from_secs_f64(config().min_dt));
     }
