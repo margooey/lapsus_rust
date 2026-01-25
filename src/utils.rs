@@ -1,4 +1,4 @@
-use cidre::cg::{Point, Rect, Size, EventSrc, EventSrcStateId};
+use cidre::cg::{EventSrc, EventSrcStateId, Point, Rect, Size};
 
 pub fn min(a: f64, b: f64) -> f64 {
     if a > b { b } else { a }

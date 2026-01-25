@@ -98,10 +98,7 @@ impl TrackpadMonitor {
     }
 
     pub fn is_touching(&self) -> bool {
-        self.state
-            .lock()
-            .expect(ERR_POISON)
-            .is_touching
+        self.state.lock().expect(ERR_POISON).is_touching
     }
 
     pub fn current_touch_positions(&self) -> Vec<Point> {
@@ -113,10 +110,7 @@ impl TrackpadMonitor {
     }
 
     pub fn current_touch_centroid(&self) -> Option<Point> {
-        self.state
-            .lock()
-            .expect(ERR_POISON)
-            .latest_centroid
+        self.state.lock().expect(ERR_POISON).latest_centroid
     }
 
     pub fn current_normalized_velocity(&self) -> Option<Vector> {
@@ -139,11 +133,7 @@ impl TrackpadMonitor {
 
     // Flag to prevent erroneous gliding when there is more than one finger touching the trackpad
     pub fn should_suppress_glide(&self) -> bool {
-        let deadline = self
-            .state
-            .lock()
-            .expect(ERR_POISON)
-            .suppress_glide_deadline;
+        let deadline = self.state.lock().expect(ERR_POISON).suppress_glide_deadline;
         objc2_core_foundation::CFAbsoluteTimeGetCurrent() < deadline
     }
 }
