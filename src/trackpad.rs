@@ -7,6 +7,7 @@ use std::mem;
 use std::sync::{Arc, Mutex};
 
 pub const ZERO_POINT: Point = Point { x: 0.0, y: 0.0 };
+const ERR_POISON: &str = "trackpad state lock poisoned";
 
 pub struct TouchMetrics {
     pub centroid: Option<Point>,
@@ -99,14 +100,14 @@ impl TrackpadMonitor {
     pub fn is_touching(&self) -> bool {
         self.state
             .lock()
-            .expect("trackpad state lock poisoned")
+            .expect(ERR_POISON)
             .is_touching
     }
 
     pub fn current_touch_positions(&self) -> Vec<Point> {
         self.state
             .lock()
-            .expect("trackpad state lock poisoned")
+            .expect(ERR_POISON)
             .latest_positions
             .clone()
     }
@@ -114,12 +115,12 @@ impl TrackpadMonitor {
     pub fn current_touch_centroid(&self) -> Option<Point> {
         self.state
             .lock()
-            .expect("trackpad state lock poisoned")
+            .expect(ERR_POISON)
             .latest_centroid
     }
 
     pub fn current_normalized_velocity(&self) -> Option<Vector> {
-        let state = self.state.lock().expect("trackpad state lock poisoned");
+        let state = self.state.lock().expect(ERR_POISON);
         if state.is_touching {
             Some(state.normalized_velocity)
         } else {
@@ -128,7 +129,7 @@ impl TrackpadMonitor {
     }
 
     pub fn metrics(&self) -> TouchMetrics {
-        let state = self.state.lock().expect("trackpad state lock poisoned");
+        let state = self.state.lock().expect(ERR_POISON);
         TouchMetrics {
             centroid: state.latest_centroid,
             normalized_velocity: state.normalized_velocity,
@@ -141,7 +142,7 @@ impl TrackpadMonitor {
         let deadline = self
             .state
             .lock()
-            .expect("trackpad state lock poisoned")
+            .expect(ERR_POISON)
             .suppress_glide_deadline;
         objc2_core_foundation::CFAbsoluteTimeGetCurrent() < deadline
     }
