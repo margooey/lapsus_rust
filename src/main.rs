@@ -7,6 +7,12 @@ pub mod utils;
 use chrono::Local;
 use cidre::cg::Float;
 use log::LevelFilter;
+use objc2::rc::autoreleasepool;
+use objc2_app_kit::{
+    NSApplication, NSApplicationActivationPolicy, NSEventMask, NSStatusBar,
+    NSVariableStatusItemLength,
+};
+use objc2_foundation::{MainThreadMarker, NSDate, NSDefaultRunLoopMode, NSString};
 use std::env;
 use std::fs::File;
 use std::io::Write;
@@ -58,12 +64,37 @@ fn main() {
         })
         .init();
 
+    let mtm = MainThreadMarker::new().expect("must be on the main thread");
+    let app = NSApplication::sharedApplication(mtm);
+    app.setActivationPolicy(NSApplicationActivationPolicy::Accessory);
+
+    let status_bar = NSStatusBar::systemStatusBar();
+    let status_item = status_bar.statusItemWithLength(NSVariableStatusItemLength);
+    let button = status_item
+        .button(mtm)
+        .expect("status bar item should have a button");
+    let title = NSString::from_str("Lapsus");
+    button.setTitle(&title);
+    let _status_item = status_item;
+
     let mut controller = controller::Controller::new();
     controller.start();
-    use std::{thread, time::Duration};
+
     loop {
-        utils::disable_local_event_suppression();
-        controller.update_state();
-        thread::sleep(Duration::from_secs_f64(config().min_dt));
+        autoreleasepool(|_pool| {
+            let _ = &_status_item;
+            let expiration = NSDate::dateWithTimeIntervalSinceNow(config().min_dt);
+            if let Some(event) = app.nextEventMatchingMask_untilDate_inMode_dequeue(
+                NSEventMask::Any,
+                Some(&expiration),
+                unsafe { NSDefaultRunLoopMode },
+                true,
+            ) {
+                app.sendEvent(&event);
+            }
+            app.updateWindows();
+            utils::disable_local_event_suppression();
+            controller.update_state();
+        });
     }
 }
