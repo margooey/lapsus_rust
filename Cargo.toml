@@ -16,3 +16,7 @@ objc2 = { version = "0.6.3", default-features = false, features = ["std"] }
 
 [dependencies.macos_multitouch]
 path = "macos-multitouch"
+
+[package.metadata.bundle]
+name = "Lapsus"
+identifier = "com.margooey.Lapsus"
