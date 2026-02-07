@@ -6,12 +6,17 @@ edition = "2024"
 [dependencies]
 cidre = { version = "0.11.5", default-features = false, features = ["cg"]}
 core-graphics = "0.25.0"
-objc2-app-kit = { version = "0.3.2", default-features = false, features = ["NSEvent", "NSScreen"] }
-objc2-foundation = { version = "0.3.2", default-features = false, features = ["NSArray", "NSEnumerator"] }
+objc2-app-kit = { version = "0.3.2", default-features = true }
+objc2-foundation = { version = "0.3.2", default-features = false, features = ["NSArray", "NSDate", "NSEnumerator", "NSString", "NSRunLoop"] }
 objc2-core-foundation = { version = "0.3.2" }
 log = "0.4.29"
 env_logger = "0.11.8"
 chrono = "0.4.42"
+objc2 = { version = "0.6.3", default-features = false, features = ["std"] }
 
 [dependencies.macos_multitouch]
 path = "macos-multitouch"
+
+[package.metadata.bundle]
+name = "Lapsus"
+identifier = "com.margooey.Lapsus"
