@@ -20,3 +20,4 @@ path = "macos-multitouch"
 [package.metadata.bundle]
 name = "Lapsus"
 identifier = "com.margooey.Lapsus"
+icon = ["assets/icon.icns"]

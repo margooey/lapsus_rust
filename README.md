@@ -1,5 +1,6 @@
 <div align="center">
-<h1>Lapsus (Rust)</h1>
+<img src="./assets/icon.png" width="256" height="256">
+<h1>Lapsus</h1>
 </div>
 
 <div align="center"><h2>What is this?</h2></div>
@@ -11,7 +12,7 @@ You can download Lapsus on the [Releases](https://github.com/margooey/Lapsus/rel
 
 You can run Lapsus simply by double-clicking on the binary. You can stop the glide behavior by pressing `Ctrl+C` or by killing the terminal session. 
 
-There is currently some work in progress to transition Lapsus (Rust) into a full macOS .app bundle instead of a CLI app. Part of the work has already been done, which enables the status bar icon and a convenient "Quit Lapsus" option. In the future, you can expect to be able to install Lapsus directly into your Applications folder from a .dmg like a regular app.
+There is currently some work in progress to transition Lapsus into a full macOS .app bundle instead of a CLI app. Part of the work has already been done, which enables the status bar icon and a convenient "Quit Lapsus" option. In the future, you can expect to be able to install Lapsus directly into your Applications folder from a .dmg like a regular app.
 
 <div align="center"><h2>Build</h2></div>
 
