@@ -5,15 +5,15 @@ pub mod trackpad;
 pub mod utils;
 
 use cidre::cg::Float;
-use objc2::rc::autoreleasepool;
-use objc2::sel;
+use objc2::{rc::autoreleasepool, sel, MainThreadOnly};
 use objc2_app_kit::{
-    NSApplication, NSApplicationActivationPolicy, NSEventMask, NSMenu, NSStatusBar,
-    NSVariableStatusItemLength,
+    NSApplication, NSApplicationActivationPolicy, NSBackingStoreType, NSEventMask, NSMenu,
+    NSStatusBar, NSVariableStatusItemLength, NSWindow, NSWindowController, NSWindowStyleMask,
 };
-use objc2_foundation::{MainThreadMarker, NSDate, NSDefaultRunLoopMode, NSString};
-use std::env;
-use std::sync::OnceLock;
+use objc2_foundation::{
+    MainThreadMarker, NSDate, NSDefaultRunLoopMode, NSPoint, NSRect, NSSize, NSString,
+};
+use std::{env, sync::OnceLock};
 
 pub struct Config {
     maximum_momentum_speed: f64,
@@ -66,10 +66,12 @@ fn main() {
         })
         .init();*/
 
+    // Generic AppKit setup
     let mtm = MainThreadMarker::new().expect("must be on the main thread");
     let app = NSApplication::sharedApplication(mtm);
     app.setActivationPolicy(NSApplicationActivationPolicy::Accessory);
 
+    // Status bar setup
     let status_bar = NSStatusBar::systemStatusBar();
     let status_item = status_bar.statusItemWithLength(NSVariableStatusItemLength);
     let button = status_item
@@ -91,10 +93,28 @@ fn main() {
     status_item.setMenu(Some(&menu));
     let _status_item = status_item;
 
+    // Window setup (settings)
+    let window = NSWindow::alloc(mtm);
+    let window_controller = NSWindowController::alloc(mtm);
+    let _window = unsafe {
+    NSWindow::initWithContentRect_styleMask_backing_defer(
+        window,
+        NSRect::new(NSPoint::new(100.0, 100.0), NSSize::new(800.0, 600.0)),
+        NSWindowStyleMask::Titled | NSWindowStyleMask::Closable,
+        NSBackingStoreType::Buffered,
+        false,
+    )
+};
+    // Window controller setup
+    let _window_controller = NSWindowController::initWithWindow(window_controller, Some(&_window));
+    unsafe { _window_controller.showWindow(None) } ;
+
+    // Controller setup
     let mut controller = controller::Controller::new();
     controller.start();
 
     loop {
+        // Update the cursor state and drain the autoreleasepool on every tick (default MIN_DT = 200Hz)
         autoreleasepool(|_pool| {
             let _ = &_status_item;
             let expiration = NSDate::dateWithTimeIntervalSinceNow(config().min_dt);
